@@ -132,7 +132,6 @@ const products = [
 // DOM Content Loaded
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize all functionality
-    initThemeToggle();
     initNavbar();
     initSlider();
     initCart();
@@ -147,42 +146,8 @@ document.addEventListener('DOMContentLoaded', function() {
     renderProducts(3); // Show only 3 products initially
     initViewMore();
     initProductSocialActions();
+    initDeals();
 });
-
-// Theme Toggle
-function initThemeToggle() {
-    const themeToggle = document.getElementById('theme-toggle');
-    const mobileThemeToggle = document.getElementById('mobile-theme-toggle');
-    
-    // Check for saved theme or prefer-color-scheme
-    const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    updateThemeIcon(savedTheme);
-    
-    function toggleTheme() {
-        const currentTheme = document.documentElement.getAttribute('data-theme');
-        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-        
-        document.documentElement.setAttribute('data-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
-        updateThemeIcon(newTheme);
-    }
-    
-    function updateThemeIcon(theme) {
-        const icons = document.querySelectorAll('.theme-toggle i');
-        icons.forEach(icon => {
-            icon.className = theme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
-        });
-    }
-    
-    if (themeToggle) {
-        themeToggle.addEventListener('click', toggleTheme);
-    }
-    
-    if (mobileThemeToggle) {
-        mobileThemeToggle.addEventListener('click', toggleTheme);
-    }
-}
 
 // Render Products
 function renderProducts(limit = null) {
@@ -394,7 +359,6 @@ function initNavbar() {
         hamburger.addEventListener('click', function() {
             navMenu.classList.toggle('active');
             hamburger.classList.toggle('active');
-            document.body.style.overflow = navMenu.classList.contains('active') ? 'hidden' : '';
         });
     }
     
@@ -415,7 +379,6 @@ function initNavbar() {
             if (window.innerWidth <= 768) {
                 navMenu.classList.remove('active');
                 hamburger.classList.remove('active');
-                document.body.style.overflow = '';
             }
         });
     });
@@ -423,12 +386,9 @@ function initNavbar() {
     // Close mobile menu when clicking outside
     document.addEventListener('click', function(e) {
         if (window.innerWidth <= 768) {
-            if (navMenu.classList.contains('active') && 
-                !navMenu.contains(e.target) && 
-                !hamburger.contains(e.target)) {
+            if (!navMenu.contains(e.target) && !hamburger.contains(e.target)) {
                 navMenu.classList.remove('active');
                 hamburger.classList.remove('active');
-                document.body.style.overflow = '';
             }
         }
     });
@@ -1095,7 +1055,7 @@ function initSmoothScroll() {
 
 // Scroll animations
 function initScrollAnimations() {
-    const animatedElements = document.querySelectorAll('.product-card, .testimonial-card, .section-header, .about-content, .feature-card');
+    const animatedElements = document.querySelectorAll('.product-card, .testimonial-card, .section-header, .about-content, .feature-card, .deal-card');
     
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
@@ -1139,4 +1099,38 @@ function initViewMore() {
             }
         });
     }
+}
+
+// Deals functionality
+function initDeals() {
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.deal-btn')) {
+            const button = e.target.closest('.deal-btn');
+            const dealCard = button.closest('.deal-card');
+            const dealTitle = dealCard.querySelector('h3').textContent;
+            const dealPrice = dealCard.querySelector('.current-price').textContent;
+            
+            // Build order message
+            let message = `🛒 *PESANAN PAKET MIX & CRUNCH*\n\n`;
+            message += `*Data Pemesan:*\n`;
+            message += `Nama: [Isi nama lengkap]\n`;
+            message += `Alamat: [Isi alamat lengkap]\n\n`;
+            
+            message += `*Detail Pesanan:*\n`;
+            message += `Paket: ${dealTitle}\n`;
+            message += `Harga: ${dealPrice}\n\n`;
+            
+            message += `*Ringkasan Pembayaran:*\n`;
+            message += `Total: ${dealPrice}\n\n`;
+            message += `*Catatan:* Ongkos kirim akan diinformasikan setelah konfirmasi pesanan.\n\n`;
+            message += `Mohon konfirmasi ketersediaan dan proses pemesanan. Terima kasih! 🙏`;
+            
+            // Encode message for WhatsApp
+            const encodedMessage = encodeURIComponent(message);
+            const whatsappURL = `https://wa.me/6285122013643?text=${encodedMessage}`;
+            
+            // Open WhatsApp
+            window.open(whatsappURL, '_blank');
+        }
+    });
 }
