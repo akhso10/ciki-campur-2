@@ -7,7 +7,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
     <link href="style.css" rel="stylesheet">
 </head>
-<body>
+<body class="light-mode">
     <!-- Navbar -->
     <nav class="navbar">
         <div class="nav-container">
@@ -59,6 +59,9 @@
                     <i class="fas fa-search search-icon"></i>
                 </div>
                 <div class="nav-icons">
+                    <button class="theme-toggle" id="theme-toggle">
+                        <i class="fas fa-moon"></i>
+                    </button>
                     <div class="cart-icon" id="cart-icon">
                         <i class="fas fa-shopping-cart"></i>
                         <span class="cart-count">0</span>
@@ -66,6 +69,9 @@
                 </div>
             </div>
             <div class="mobile-nav-controls">
+                <button class="theme-toggle mobile-theme" id="mobile-theme-toggle">
+                    <i class="fas fa-moon"></i>
+                </button>
                 <div class="cart-icon mobile-cart" id="mobile-cart-icon">
                     <i class="fas fa-shopping-cart"></i>
                     <span class="cart-count">0</span>
@@ -115,6 +121,19 @@
         </div>
     </div>
 
+    <!-- Order History Sidebar -->
+    <div class="order-history-sidebar" id="order-history-sidebar">
+        <div class="order-history-header">
+            <h3><i class="fas fa-history"></i> Riwayat Pemesanan</h3>
+            <button class="close-order-history"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="order-history-container">
+            <div class="order-history-items" id="order-history-items">
+                <!-- Order history items will be added here dynamically -->
+            </div>
+        </div>
+    </div>
+
     <!-- Toppings Modal -->
     <div class="toppings-modal" id="toppings-modal">
         <div class="toppings-modal-content">
@@ -124,8 +143,9 @@
             </div>
             <div class="toppings-body">
                 <div class="form-group">
-                    <label for="custom-toppings"><i class="fas fa-edit"></i> Topping Kustom</label>
-                    <textarea id="custom-toppings" placeholder="Contoh: Keju, Pedas, BBQ, Rumput Laut" rows="4"></textarea>
+                    <label for="custom-toppings"><i class="fas fa-edit"></i> Topping Kustom <span class="required">*</span></label>
+                    <textarea id="custom-toppings" placeholder="Contoh: Keju, Pedas, BBQ, Rumput Laut" rows="4" required></textarea>
+                    <div class="error-message" id="toppings-error">Silakan isi topping terlebih dahulu</div>
                 </div>
             </div>
             <div class="toppings-footer">
@@ -137,6 +157,55 @@
                     <i class="fas fa-arrow-left"></i>
                     Kembali
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reviews Modal -->
+    <div class="reviews-modal" id="reviews-modal">
+        <div class="reviews-modal-content">
+            <div class="reviews-header">
+                <h3><i class="fas fa-star"></i> Ulasan Produk</h3>
+                <button class="close-reviews"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="reviews-body">
+                <div class="product-review-info">
+                    <img id="review-product-image" src="" alt="Product Image">
+                    <div>
+                        <h4 id="review-product-name"></h4>
+                        <div class="product-rating">
+                            <div class="stars" id="review-product-rating">
+                                <!-- Stars will be populated here -->
+                            </div>
+                            <span class="review-count" id="review-product-count">(0 ulasan)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="add-review-section">
+                    <h4>Tambah Ulasan</h4>
+                    <div class="rating-input">
+                        <span>Rating:</span>
+                        <div class="star-rating">
+                            <i class="far fa-star" data-rating="1"></i>
+                            <i class="far fa-star" data-rating="2"></i>
+                            <i class="far fa-star" data-rating="3"></i>
+                            <i class="far fa-star" data-rating="4"></i>
+                            <i class="far fa-star" data-rating="5"></i>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="reviewer-name">Nama</label>
+                        <input type="text" id="reviewer-name" placeholder="Masukkan nama Anda">
+                    </div>
+                    <div class="form-group">
+                        <label for="review-comment">Komentar</label>
+                        <textarea id="review-comment" placeholder="Bagikan pengalaman Anda dengan produk ini" rows="4"></textarea>
+                    </div>
+                    <button class="btn-primary" id="submit-review">Kirim Ulasan</button>
+                </div>
+                <div class="reviews-list" id="reviews-list">
+                    <!-- Reviews will be populated here -->
+                </div>
             </div>
         </div>
     </div>
@@ -159,7 +228,8 @@
         <div class="container">
             <div class="hero-content">
                 <div class="hero-text slide-in-left">
-                    <h1>Mix & Crunch <span>ciki campur</span></h1>
+                    <h1>Mix & Crunch</h1>
+                    <span class="hero-subtitle">CIKI campur</span>
                     <p>Rasa autentik Indonesia dalam setiap gigitan. Nikmati kelezatan ciki berkualitas dengan berbagai varian rasa yang menggugah selera.</p>
                     <div class="hero-buttons">
                         <a class="btn-primary" href="#produk">
@@ -226,7 +296,7 @@
                 </div>
                 <div class="promo-text">
                     <h3>Promo Spesial Akhir Tahun!</h3>
-                    <p>Coming Soon! Dapatkan diskon hingga 30% untuk semua produk.</p>
+                    <p class="promo-small">Coming Soon! Dapatkan diskon hingga 30% untuk semua produk.</p>
                 </div>
                 <div class="promo-timer">
                     <div class="timer-unit">
@@ -410,63 +480,6 @@
         </div>
     </section>
 
-    <!-- Deals Section -->
-    <section class="deals" id="deals">
-        <div class="container">
-            <div class="section-header">
-                <h2>Penawaran Spesial</h2>
-                <p>Jangan lewatkan penawaran menarik khusus untuk Anda!</p>
-            </div>
-            <div class="deals-grid">
-                <div class="deal-card">
-                    <div class="deal-badge">HOT</div>
-                    <div class="deal-content">
-                        <h3>Paket Hemat Keluarga</h3>
-                        <p>Dapatkan 5 varian ciki favorit dengan harga spesial. Cocok untuk keluarga!</p>
-                        <div class="deal-price">
-                            <span class="old-price">Rp 75.000</span>
-                            <span class="current-price">Rp 60.000</span>
-                        </div>
-                        <button class="btn-primary deal-btn">
-                            <i class="fas fa-shopping-cart"></i>
-                            Beli Sekarang
-                        </button>
-                    </div>
-                </div>
-                <div class="deal-card">
-                    <div class="deal-badge">NEW</div>
-                    <div class="deal-content">
-                        <h3>Paket Nongkrong</h3>
-                        <p>3 varian ciki terpopuler untuk teman nongkrong Anda. Dapatkan gratis 1 minuman!</p>
-                        <div class="deal-price">
-                            <span class="old-price">Rp 45.000</span>
-                            <span class="current-price">Rp 35.000</span>
-                        </div>
-                        <button class="btn-primary deal-btn">
-                            <i class="fas fa-shopping-cart"></i>
-                            Beli Sekarang
-                        </button>
-                    </div>
-                </div>
-                <div class="deal-card">
-                    <div class="deal-badge">LIMITED</div>
-                    <div class="deal-content">
-                        <h3>Paket Ultimate</h3>
-                        <p>Semua varian ciki kami dalam satu paket. Gratis ongkir untuk pembelian ini!</p>
-                        <div class="deal-price">
-                            <span class="old-price">Rp 150.000</span>
-                            <span class="current-price">Rp 120.000</span>
-                        </div>
-                        <button class="btn-primary deal-btn">
-                            <i class="fas fa-shopping-cart"></i>
-                            Beli Sekarang
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
     <!-- FAQ Section -->
     <section class="faq">
         <div class="container">
@@ -600,6 +613,11 @@
     <!-- Back to Top Button -->
     <div class="back-to-top" id="back-to-top">
         <i class="fas fa-chevron-up"></i>
+    </div>
+
+    <!-- Order History Button -->
+    <div class="order-history-btn" id="order-history-btn">
+        <i class="fas fa-history"></i>
     </div>
 
     <script src="script.js"></script>
