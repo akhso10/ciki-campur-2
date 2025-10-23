@@ -132,8 +132,9 @@ const products = [
 // Reviews Data (stored in localStorage)
 let reviews = JSON.parse(localStorage.getItem('productReviews')) || {};
 
-// Order History Data (stored in localStorage)
-let orderHistory = JSON.parse(localStorage.getItem('orderHistory')) || [];
+// Cart Data
+let cart = JSON.parse(localStorage.getItem('cart')) || [];
+let selectedToppings = [];
 
 // DOM Content Loaded
 document.addEventListener('DOMContentLoaded', function() {
@@ -152,9 +153,7 @@ document.addEventListener('DOMContentLoaded', function() {
     renderProducts(3); // Show only 3 products initially
     initViewMore();
     initProductSocialActions();
-    initThemeToggle();
     initReviewsModal();
-    initOrderHistory();
 });
 
 // Render Products
@@ -530,8 +529,6 @@ function initCart() {
     const checkoutBtn = document.getElementById('checkout-btn');
     const clearCartBtn = document.getElementById('clear-cart-btn');
     
-    let cart = JSON.parse(localStorage.getItem('cart')) || [];
-    
     // Toggle cart sidebar
     window.openCartSidebar = function() {
         if (cartSidebar && cartOverlay) {
@@ -773,7 +770,6 @@ function initToppingsModal() {
     const closeToppings = document.querySelector('.close-toppings');
     const cancelToppings = document.getElementById('cancel-toppings');
     const confirmToppings = document.getElementById('confirm-toppings');
-    const toppingsError = document.getElementById('toppings-error');
     
     // Open toppings modal
     window.openToppingsModal = function() {
@@ -782,7 +778,13 @@ function initToppingsModal() {
             document.body.style.overflow = 'hidden';
             // Reset form
             document.getElementById('custom-toppings').value = '';
-            toppingsError.classList.remove('show');
+            // Uncheck all checkboxes
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            // Reset topping subtotal
+            document.getElementById('topping-modal-subtotal').textContent = 'Rp 0';
+            selectedToppings = [];
         }
     };
     
@@ -802,39 +804,49 @@ function initToppingsModal() {
         cancelToppings.addEventListener('click', closeToppingsModal);
     }
     
+    // Handle topping selection
+    document.addEventListener('change', function(e) {
+        if (e.target.type === 'checkbox' && e.target.name) {
+            const toppingName = e.target.value;
+            const toppingPrice = parseInt(e.target.getAttribute('data-price'));
+            
+            if (e.target.checked) {
+                selectedToppings.push({
+                    name: toppingName,
+                    price: toppingPrice
+                });
+            } else {
+                selectedToppings = selectedToppings.filter(topping => topping.name !== toppingName);
+            }
+            
+            updateToppingSubtotal();
+        }
+    });
+    
+    // Update topping subtotal
+    function updateToppingSubtotal() {
+        const toppingSubtotal = selectedToppings.reduce((total, topping) => total + topping.price, 0);
+        document.getElementById('topping-modal-subtotal').textContent = `Rp ${toppingSubtotal.toLocaleString('id-ID')}`;
+    }
+    
     // Confirm toppings and send to WhatsApp
     if (confirmToppings) {
         confirmToppings.addEventListener('click', function() {
             const customToppings = document.getElementById('custom-toppings').value.trim();
             
-            // Validate toppings
-            if (!customToppings) {
-                toppingsError.classList.add('show');
-                return;
-            }
-            
-            sendOrderToWhatsApp(customToppings);
+            sendOrderToWhatsApp(selectedToppings, customToppings);
             closeToppingsModal();
         });
     }
     
-    // Hide error when user starts typing
-    const toppingsTextarea = document.getElementById('custom-toppings');
-    if (toppingsTextarea) {
-        toppingsTextarea.addEventListener('input', function() {
-            if (this.value.trim()) {
-                toppingsError.classList.remove('show');
-            }
-        });
-    }
-    
     // Send order to WhatsApp
-    function sendOrderToWhatsApp(customToppings) {
+    function sendOrderToWhatsApp(selectedToppings, customToppings) {
         const cart = window.getCart();
         
         // Calculate totals
-        const subtotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
-        const total = subtotal;
+        const productSubtotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+        const toppingSubtotal = selectedToppings.reduce((total, topping) => total + topping.price, 0);
+        const total = productSubtotal + toppingSubtotal;
         
         // Build order message
         let message = `Halo! Saya tertarik untuk memesan produk berikut:\n\n`;
@@ -847,12 +859,21 @@ function initToppingsModal() {
             message += `   Subtotal: Rp ${(item.price * item.quantity).toLocaleString('id-ID')}\n\n`;
         });
         
+        if (selectedToppings.length > 0) {
+            message += `*Topping:*\n`;
+            selectedToppings.forEach((topping, index) => {
+                message += `${index + 1}. ${topping.name} - Rp ${topping.price.toLocaleString('id-ID')}\n`;
+            });
+            message += `Subtotal Topping: Rp ${toppingSubtotal.toLocaleString('id-ID')}\n\n`;
+        }
+        
         if (customToppings) {
-            message += `*Topping:*\n${customToppings}\n\n`;
+            message += `*Catatan Khusus:*\n${customToppings}\n\n`;
         }
         
         message += `*Ringkasan Pembayaran:*\n`;
-        message += `Subtotal: Rp ${subtotal.toLocaleString('id-ID')}\n`;
+        message += `Subtotal Produk: Rp ${productSubtotal.toLocaleString('id-ID')}\n`;
+        message += `Subtotal Topping: Rp ${toppingSubtotal.toLocaleString('id-ID')}\n`;
         message += `*Total: Rp ${total.toLocaleString('id-ID')}*\n\n`;
         message += `Bisa tolong informasikan ketersediaan dan cara pemesanannya? Terima kasih!`;
         
@@ -863,9 +884,6 @@ function initToppingsModal() {
         // Open WhatsApp
         window.open(whatsappURL, '_blank');
         
-        // Add to order history
-        addToOrderHistory(cart, total, customToppings);
-        
         // Clear cart after successful order
         window.clearCart();
         
@@ -873,28 +891,6 @@ function initToppingsModal() {
         setTimeout(() => {
             alert('Pesanan berhasil dikirim ke WhatsApp! Terima kasih telah berbelanja.');
         }, 1000);
-    }
-    
-    // Add order to history
-    function addToOrderHistory(cart, total, toppings) {
-        const order = {
-            id: Date.now().toString(),
-            date: new Date().toLocaleDateString('id-ID'),
-            products: cart.map(item => ({
-                name: item.name,
-                quantity: item.quantity,
-                price: item.price
-            })),
-            total: total,
-            toppings: toppings,
-            status: 'pending'
-        };
-        
-        orderHistory.unshift(order);
-        localStorage.setItem('orderHistory', JSON.stringify(orderHistory));
-        
-        // Update order history display
-        updateOrderHistory();
     }
 }
 
@@ -1131,52 +1127,6 @@ function initViewMore() {
     }
 }
 
-// Theme Toggle functionality
-function initThemeToggle() {
-    const themeToggle = document.getElementById('theme-toggle');
-    const mobileThemeToggle = document.getElementById('mobile-theme-toggle');
-    
-    // Check for saved theme preference or default to light
-    const currentTheme = localStorage.getItem('theme') || 'light-mode';
-    document.body.className = currentTheme;
-    
-    // Update icon based on current theme
-    updateThemeIcon(currentTheme);
-    
-    function toggleTheme() {
-        if (document.body.classList.contains('light-mode')) {
-            document.body.classList.replace('light-mode', 'dark-mode');
-            localStorage.setItem('theme', 'dark-mode');
-            updateThemeIcon('dark-mode');
-        } else {
-            document.body.classList.replace('dark-mode', 'light-mode');
-            localStorage.setItem('theme', 'light-mode');
-            updateThemeIcon('light-mode');
-        }
-    }
-    
-    function updateThemeIcon(theme) {
-        const icons = document.querySelectorAll('.theme-toggle i');
-        icons.forEach(icon => {
-            if (theme === 'dark-mode') {
-                icon.classList.remove('fa-moon');
-                icon.classList.add('fa-sun');
-            } else {
-                icon.classList.remove('fa-sun');
-                icon.classList.add('fa-moon');
-            }
-        });
-    }
-    
-    if (themeToggle) {
-        themeToggle.addEventListener('click', toggleTheme);
-    }
-    
-    if (mobileThemeToggle) {
-        mobileThemeToggle.addEventListener('click', toggleTheme);
-    }
-}
-
 // Reviews Modal functionality
 function initReviewsModal() {
     const reviewsModal = document.getElementById('reviews-modal');
@@ -1229,6 +1179,7 @@ function initReviewsModal() {
             }
             
             reviews[productId].push({
+                id: Date.now().toString(),
                 name: reviewerName,
                 rating: rating,
                 comment: reviewComment,
@@ -1328,8 +1279,141 @@ function displayProductReviews(productId) {
                 <span class="review-date">${review.date}</span>
             </div>
             <p class="review-comment">${review.comment}</p>
+            <div class="review-actions">
+                <button class="review-action-btn edit-review" data-id="${review.id}" data-product="${productId}">
+                    <i class="fas fa-edit"></i> Edit
+                </button>
+                <button class="review-action-btn delete-review delete" data-id="${review.id}" data-product="${productId}">
+                    <i class="fas fa-trash"></i> Hapus
+                </button>
+            </div>
         </div>
     `).join('');
+    
+    // Add event listeners for edit and delete buttons
+    document.querySelectorAll('.edit-review').forEach(button => {
+        button.addEventListener('click', function() {
+            const reviewId = this.getAttribute('data-id');
+            const productId = this.getAttribute('data-product');
+            editReview(productId, reviewId);
+        });
+    });
+    
+    document.querySelectorAll('.delete-review').forEach(button => {
+        button.addEventListener('click', function() {
+            const reviewId = this.getAttribute('data-id');
+            const productId = this.getAttribute('data-product');
+            deleteReview(productId, reviewId);
+        });
+    });
+}
+
+// Edit review
+function editReview(productId, reviewId) {
+    const productReviews = reviews[productId] || [];
+    const review = productReviews.find(r => r.id === reviewId);
+    
+    if (!review) return;
+    
+    // Populate form with review data
+    document.getElementById('reviewer-name').value = review.name;
+    document.getElementById('review-comment').value = review.comment;
+    
+    // Set star rating
+    const stars = document.querySelectorAll('.star-rating i');
+    stars.forEach((star, index) => {
+        if (index < review.rating) {
+            star.classList.add('active');
+            star.classList.remove('far');
+            star.classList.add('fas');
+        } else {
+            star.classList.remove('active');
+            star.classList.remove('fas');
+            star.classList.add('far');
+        }
+    });
+    
+    // Update submit button to edit mode
+    const submitButton = document.getElementById('submit-review');
+    submitButton.textContent = 'Update Ulasan';
+    submitButton.setAttribute('data-edit-id', reviewId);
+    
+    // Change submit button behavior
+    submitButton.onclick = function() {
+        const reviewerName = document.getElementById('reviewer-name').value.trim();
+        const reviewComment = document.getElementById('review-comment').value.trim();
+        const activeStars = document.querySelectorAll('.star-rating i.active');
+        const rating = activeStars.length;
+        
+        if (!reviewerName || !reviewComment || rating === 0) {
+            alert('Silakan isi semua field dan berikan rating!');
+            return;
+        }
+        
+        // Update review
+        const reviewIndex = productReviews.findIndex(r => r.id === reviewId);
+        if (reviewIndex !== -1) {
+            productReviews[reviewIndex] = {
+                ...productReviews[reviewIndex],
+                name: reviewerName,
+                rating: rating,
+                comment: reviewComment
+            };
+            
+            // Save to localStorage
+            localStorage.setItem('productReviews', JSON.stringify(reviews));
+            
+            // Update reviews display
+            displayProductReviews(productId);
+            
+            // Reset form
+            document.getElementById('reviewer-name').value = '';
+            document.getElementById('review-comment').value = '';
+            const stars = document.querySelectorAll('.star-rating i');
+            stars.forEach(star => {
+                star.classList.remove('active');
+                star.classList.remove('fas');
+                star.classList.add('far');
+            });
+            
+            // Reset submit button
+            submitButton.textContent = 'Kirim Ulasan';
+            submitButton.removeAttribute('data-edit-id');
+            submitButton.onclick = null;
+            
+            // Show success message
+            showSocialNotification('Ulasan berhasil diperbarui!');
+            
+            // Update product rating in product card
+            updateProductRating(productId);
+        }
+    };
+}
+
+// Delete review
+function deleteReview(productId, reviewId) {
+    if (!confirm('Apakah Anda yakin ingin menghapus ulasan ini?')) {
+        return;
+    }
+    
+    const productReviews = reviews[productId] || [];
+    const reviewIndex = productReviews.findIndex(r => r.id === reviewId);
+    
+    if (reviewIndex !== -1) {
+        productReviews.splice(reviewIndex, 1);
+        
+        // Save to localStorage
+        localStorage.setItem('productReviews', JSON.stringify(reviews));
+        
+        // Update reviews display
+        displayProductReviews(productId);
+        
+        // Show success message
+        showSocialNotification('Ulasan berhasil dihapus!');
+        
+        // Update product rating in product card
+        updateProductRating(productId);
+    }
 }
 
 // Update product rating in product card
@@ -1352,113 +1436,4 @@ function updateProductRating(productId) {
     if (reviewCountElement) {
         reviewCountElement.textContent = `(${productReviews.length} ulasan)`;
     }
-}
-
-// Order History functionality
-function initOrderHistory() {
-    const orderHistoryBtn = document.getElementById('order-history-btn');
-    const orderHistorySidebar = document.getElementById('order-history-sidebar');
-    const closeOrderHistory = document.querySelector('.close-order-history');
-    const orderHistoryOverlay = document.getElementById('cart-overlay'); // Reuse cart overlay
-    
-    // Show order history button on scroll
-    window.addEventListener('scroll', () => {
-        if (window.pageYOffset > 300) {
-            orderHistoryBtn.classList.add('visible');
-        } else {
-            orderHistoryBtn.classList.remove('visible');
-        }
-    });
-    
-    // Open order history sidebar
-    if (orderHistoryBtn) {
-        orderHistoryBtn.addEventListener('click', openOrderHistorySidebar);
-    }
-    
-    // Close order history sidebar
-    if (closeOrderHistory) {
-        closeOrderHistory.addEventListener('click', closeOrderHistorySidebar);
-    }
-    
-    if (orderHistoryOverlay) {
-        orderHistoryOverlay.addEventListener('click', closeOrderHistorySidebar);
-    }
-    
-    // Update order history on page load
-    updateOrderHistory();
-}
-
-// Open order history sidebar
-function openOrderHistorySidebar() {
-    const orderHistorySidebar = document.getElementById('order-history-sidebar');
-    const orderHistoryOverlay = document.getElementById('cart-overlay');
-    
-    if (orderHistorySidebar && orderHistoryOverlay) {
-        orderHistorySidebar.classList.add('active');
-        orderHistoryOverlay.classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
-}
-
-// Close order history sidebar
-function closeOrderHistorySidebar() {
-    const orderHistorySidebar = document.getElementById('order-history-sidebar');
-    const orderHistoryOverlay = document.getElementById('cart-overlay');
-    
-    if (orderHistorySidebar && orderHistoryOverlay) {
-        orderHistorySidebar.classList.remove('active');
-        orderHistoryOverlay.classList.remove('active');
-        document.body.style.overflow = '';
-    }
-}
-
-// Update order history display
-function updateOrderHistory() {
-    const orderHistoryItems = document.getElementById('order-history-items');
-    
-    if (!orderHistoryItems) return;
-    
-    if (orderHistory.length === 0) {
-        orderHistoryItems.innerHTML = `
-            <div class="empty-order-history">
-                <i class="fas fa-history"></i>
-                <p>Belum ada riwayat pemesanan</p>
-                <small>Pesanan Anda akan muncul di sini</small>
-            </div>
-        `;
-        return;
-    }
-    
-    orderHistoryItems.innerHTML = orderHistory.map(order => `
-        <div class="order-item">
-            <div class="order-header">
-                <span class="order-id">#${order.id.slice(-6)}</span>
-                <span class="order-date">${order.date}</span>
-            </div>
-            <div class="order-products">
-                ${order.products.map(product => `
-                    <div class="order-product">
-                        <span>${product.name} (${product.quantity}x)</span>
-                        <span>Rp ${(product.price * product.quantity).toLocaleString('id-ID')}</span>
-                    </div>
-                `).join('')}
-            </div>
-            ${order.toppings ? `<p><strong>Topping:</strong> ${order.toppings}</p>` : ''}
-            <div class="order-footer">
-                <span class="order-total">Rp ${order.total.toLocaleString('id-ID')}</span>
-                <span class="order-status ${order.status}">${getStatusText(order.status)}</span>
-            </div>
-        </div>
-    `).join('');
-}
-
-// Get status text
-function getStatusText(status) {
-    const statusMap = {
-        'pending': 'Menunggu',
-        'completed': 'Selesai',
-        'cancelled': 'Dibatalkan'
-    };
-    
-    return statusMap[status] || status;
 }
