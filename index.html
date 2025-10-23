@@ -5,9 +5,9 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>Mix & Crunch - Snack Terbaik Indonesia</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
-    <link href="style.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
 </head>
-<body class="light-mode">
+<body>
     <!-- Navbar -->
     <nav class="navbar">
         <div class="nav-container">
@@ -59,9 +59,6 @@
                     <i class="fas fa-search search-icon"></i>
                 </div>
                 <div class="nav-icons">
-                    <button class="theme-toggle" id="theme-toggle">
-                        <i class="fas fa-moon"></i>
-                    </button>
                     <div class="cart-icon" id="cart-icon">
                         <i class="fas fa-shopping-cart"></i>
                         <span class="cart-count">0</span>
@@ -69,9 +66,6 @@
                 </div>
             </div>
             <div class="mobile-nav-controls">
-                <button class="theme-toggle mobile-theme" id="mobile-theme-toggle">
-                    <i class="fas fa-moon"></i>
-                </button>
                 <div class="cart-icon mobile-cart" id="mobile-cart-icon">
                     <i class="fas fa-shopping-cart"></i>
                     <span class="cart-count">0</span>
@@ -99,8 +93,12 @@
         </div>
         <div class="cart-summary">
             <div class="summary-item">
-                <span>Subtotal</span>
+                <span>Subtotal Produk</span>
                 <span id="cart-subtotal">Rp 0</span>
+            </div>
+            <div class="summary-item">
+                <span>Subtotal Topping</span>
+                <span id="topping-subtotal">Rp 0</span>
             </div>
             <div class="summary-item total">
                 <span>Total</span>
@@ -121,31 +119,102 @@
         </div>
     </div>
 
-    <!-- Order History Sidebar -->
-    <div class="order-history-sidebar" id="order-history-sidebar">
-        <div class="order-history-header">
-            <h3><i class="fas fa-history"></i> Riwayat Pemesanan</h3>
-            <button class="close-order-history"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="order-history-container">
-            <div class="order-history-items" id="order-history-items">
-                <!-- Order history items will be added here dynamically -->
-            </div>
-        </div>
-    </div>
-
     <!-- Toppings Modal -->
     <div class="toppings-modal" id="toppings-modal">
         <div class="toppings-modal-content">
             <div class="toppings-header">
-                <h3><i class="fas fa-utensils"></i> Tambahkan Topping</h3>
+                <h3><i class="fas fa-utensils"></i> Pilih Topping</h3>
                 <button class="close-toppings"><i class="fas fa-times"></i></button>
             </div>
             <div class="toppings-body">
+                <div class="topping-category">
+                    <h4>Saus</h4>
+                    <div class="topping-options">
+                        <label class="topping-option">
+                            <input type="checkbox" name="saus" value="Saus Tomat" data-price="2000">
+                            <span>Saus Tomat</span>
+                            <span class="topping-price">+Rp 2.000</span>
+                        </label>
+                        <label class="topping-option">
+                            <input type="checkbox" name="saus" value="Saus Sambal" data-price="2000">
+                            <span>Saus Sambal</span>
+                            <span class="topping-price">+Rp 2.000</span>
+                        </label>
+                        <label class="topping-option">
+                            <input type="checkbox" name="saus" value="Mayones" data-price="2500">
+                            <span>Mayones</span>
+                            <span class="topping-price">+Rp 2.500</span>
+                        </label>
+                        <label class="topping-option">
+                            <input type="checkbox" name="saus" value="Saus BBQ" data-price="3000">
+                            <span>Saus BBQ</span>
+                            <span class="topping-price">+Rp 3.000</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="topping-category">
+                    <h4>Sayuran</h4>
+                    <div class="topping-options">
+                        <label class="topping-option">
+                            <input type="checkbox" name="sayuran" value="Selada" data-price="1500">
+                            <span>Selada</span>
+                            <span class="topping-price">+Rp 1.500</span>
+                        </label>
+                        <label class="topping-option">
+                            <input type="checkbox" name="sayuran" value="Tomat" data-price="1500">
+                            <span>Tomat</span>
+                            <span class="topping-price">+Rp 1.500</span>
+                        </label>
+                        <label class="topping-option">
+                            <input type="checkbox" name="sayuran" value="Timun" data-price="1000">
+                            <span>Timun</span>
+                            <span class="topping-price">+Rp 1.000</span>
+                        </label>
+                        <label class="topping-option">
+                            <input type="checkbox" name="sayuran" value="Jagung" data-price="2000">
+                            <span>Jagung</span>
+                            <span class="topping-price">+Rp 2.000</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="topping-category">
+                    <h4>Topping Tambahan</h4>
+                    <div class="topping-options">
+                        <label class="topping-option">
+                            <input type="checkbox" name="topping" value="Nugget" data-price="5000">
+                            <span>Nugget</span>
+                            <span class="topping-price">+Rp 5.000</span>
+                        </label>
+                        <label class="topping-option">
+                            <input type="checkbox" name="topping" value="Sosis" data-price="4000">
+                            <span>Sosis</span>
+                            <span class="topping-price">+Rp 4.000</span>
+                        </label>
+                        <label class="topping-option">
+                            <input type="checkbox" name="topping" value="Keju" data-price="3500">
+                            <span>Keju</span>
+                            <span class="topping-price">+Rp 3.500</span>
+                        </label>
+                        <label class="topping-option">
+                            <input type="checkbox" name="topping" value="Telur" data-price="3000">
+                            <span>Telur</span>
+                            <span class="topping-price">+Rp 3.000</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="topping-summary">
+                    <div class="topping-summary-item">
+                        <span>Subtotal Topping:</span>
+                        <span id="topping-modal-subtotal">Rp 0</span>
+                    </div>
+                </div>
+                
                 <div class="form-group">
-                    <label for="custom-toppings"><i class="fas fa-edit"></i> Topping Kustom <span class="required">*</span></label>
-                    <textarea id="custom-toppings" placeholder="Contoh: Keju, Pedas, BBQ, Rumput Laut" rows="4" required></textarea>
-                    <div class="error-message" id="toppings-error">Silakan isi topping terlebih dahulu</div>
+                    <label for="custom-toppings"><i class="fas fa-edit"></i> Catatan Khusus</label>
+                    <textarea id="custom-toppings" placeholder="Contoh: Tambah pedas, tanpa bawang, dll" rows="3"></textarea>
                 </div>
             </div>
             <div class="toppings-footer">
@@ -254,12 +323,6 @@
                             <div class="slide" data-color="green">
                                 <img alt="Ciki Jagung Bakar" src="ciki 2.png"/>
                             </div>
-                            <div class="slide" data-color="purple">
-                                <img alt="Ciki Balado" src="ciki 3.jpg"/>
-                            </div>
-                            <div class="slide" data-color="orange">
-                                <img alt="Ciki BBQ" src="ciki 1.jpg"/>
-                            </div>
                         </div>
                         <div class="slider-controls">
                             <button class="slider-btn" id="prev-slide">
@@ -273,8 +336,6 @@
                             <div class="slider-dot active" data-slide="0"></div>
                             <div class="slider-dot" data-slide="1"></div>
                             <div class="slider-dot" data-slide="2"></div>
-                            <div class="slider-dot" data-slide="3"></div>
-                            <div class="slider-dot" data-slide="4"></div>
                         </div>
                     </div>
                 </div>
@@ -581,14 +642,8 @@
                             <a class="social-icon" href="https://www.instagram.com/mixncrunch.id?igsh=dDI0MWtyM28wdjMy">
                                 <i class="fab fa-instagram"></i>
                             </a>
-                            <a class="social-icon" href="#">
-                                <i class="fab fa-facebook-f"></i>
-                            </a>
-                            <a class="social-icon" href="#">
-                                <i class="fab fa-twitter"></i>
-                            </a>
-                            <a class="social-icon" href="#">
-                                <i class="fab fa-tiktok"></i>
+                            <a class="social-icon" href="https://wa.me/6285122013643">
+                                <i class="fab fa-whatsapp"></i>
                             </a>
                         </div>
                     </div>
@@ -613,11 +668,6 @@
     <!-- Back to Top Button -->
     <div class="back-to-top" id="back-to-top">
         <i class="fas fa-chevron-up"></i>
-    </div>
-
-    <!-- Order History Button -->
-    <div class="order-history-btn" id="order-history-btn">
-        <i class="fas fa-history"></i>
     </div>
 
     <script src="script.js"></script>
